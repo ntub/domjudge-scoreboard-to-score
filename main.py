@@ -4,6 +4,9 @@ import sys
 
 from typing import Dict, List
 
+simulation_contest_no_show_site_ids = []  # 模擬賽沒出席的
+real_contest_no_show_site_ids = []  # 正式賽沒出席的
+
 
 def load_data(filename: str) -> List[Dict[str, str]]:
     assert os.path.exists(filename), f"{filename} not exists."
@@ -61,11 +64,21 @@ def main() -> None:
         rank = int(rank_str)
         solved_count = int(solved_count_str)
 
+        if site_id not in simulation_contest_no_show_site_ids:
+            solved_count += 1
+
         if max_solved_count is None:
             max_solved_count = solved_count
 
         rank_point = 100 - int(rank) + 1  # 排名點數
         solved_point = 100 - (max_solved_count - solved_count) * 5  # 解題點數，跟最多比每多一台扣五分
+
+        final_score = rank_point * solved_point / 100
+        if (  # TODO: 兩場都沒出席的人直接零分（目前沒發生過這邊要再確認一下）
+            site_id in simulation_contest_no_show_site_ids
+            and site_id in real_contest_no_show_site_ids
+        ):
+            final_score = 0
 
         row = [
             rank,
@@ -76,7 +89,7 @@ def main() -> None:
             solved_count,
             rank_point,
             solved_point,
-            rank_point * solved_point / 100,
+            final_score,
         ]
         rows.append(row)
 
